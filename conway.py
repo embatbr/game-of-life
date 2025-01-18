@@ -20,10 +20,11 @@ class Game(object):
 
     DEFAULT_GRID_SIZE = 30
 
-    def __init__(self, input_num):
+    def __init__(self, input_num, size=DEFAULT_GRID_SIZE):
         super(Game, self).__init__()
 
         self.input_num = input_num
+        self.size = size
 
         self.reset()
 
@@ -73,16 +74,16 @@ class Game(object):
     def apply_rules(self):
         next_grid = list()
 
-        for i in range(Game.DEFAULT_GRID_SIZE):
+        for i in range(self.size):
             row = list()
 
-            for j in range(Game.DEFAULT_GRID_SIZE):
+            for j in range(self.size):
                 cell = self.grid[i][j]
 
-                i_minus_1 = (i - 1) % 30
-                i_plus_1 = (i + 1) % 30
-                j_minus_1 = (j - 1) % 30
-                j_plus_1 = (j + 1) % 30
+                i_minus_1 = (i - 1) % self.size
+                i_plus_1 = (i + 1) % self.size
+                j_minus_1 = (j - 1) % self.size
+                j_plus_1 = (j + 1) % self.size
 
                 num_live_neighbors = 0
                 # checking neighbors
