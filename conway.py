@@ -9,7 +9,6 @@ OUTPUT_GRID_FILEPATH = 'output'
 
 DEAD = u"\u25A1"
 ALIVE = u"\u25A3"
-ALLOWED_CHARS = set([DEAD, ALIVE])
 SLEEP_INTERVAL = 1
 
 
@@ -26,37 +25,32 @@ class Game(object):
         self.input_num = input_num
         self.size = size
 
+        self.keep_running = True
+
         self.reset()
 
     def reset(self):
-        self.grid = list()
+        self.grid = [[DEAD for _ in range(self.size)] for _ in range(self.size)]
         self.generation = 1
         self.population = 0
 
-        file = open(f"{INPUT_GRID_DIRPATH}/input-{self.input_num}")
+        file = open(f"{INPUT_GRID_DIRPATH}/{self.input_num}")
+
         i = 0
         for line in file:
-            row = list()
-
             j = 0
             for char in line:
-                if char == '\n':
-                    continue
-
-                row.append(char)
                 if char == ALIVE:
+                    self.grid[i][j] = ALIVE
                     self.population = self.population + 1
 
                 j = j + 1
-
-            self.grid.append(row)
-
             i = i + 1
 
     def run(self):
         self.write_grid()
 
-        while True:
+        while self.keep_running:
             self.apply_rules()
             self.generation = self.generation + 1
 
@@ -72,11 +66,9 @@ class Game(object):
             file.write(screen)
 
     def apply_rules(self):
-        next_grid = list()
+        next_grid = [[DEAD for _ in range(self.size)] for _ in range(self.size)]
 
         for i in range(self.size):
-            row = list()
-
             for j in range(self.size):
                 cell = self.grid[i][j]
 
@@ -85,14 +77,12 @@ class Game(object):
                 j_minus_1 = (j - 1) % self.size
                 j_plus_1 = (j + 1) % self.size
 
-                num_live_neighbors = 0
                 # checking neighbors
+                num_live_neighbors = 0
                 for ix in [i_minus_1, i, i_plus_1]:
                     for jx in [j_minus_1, j, j_plus_1]:
                         if ((ix, jx) != (i, j)) and (self.grid[ix][jx] == ALIVE):
                                 num_live_neighbors = num_live_neighbors + 1
-
-                # print(i, j, cell, num_live_neighbors)
 
                 if (cell == ALIVE) and ((num_live_neighbors < 2) or (num_live_neighbors > 3)):
                     cell = DEAD # rules 1, 2 and 3
@@ -101,9 +91,10 @@ class Game(object):
                     cell = ALIVE # rule 4
                     self.population = self.population + 1
 
-                row.append(cell)
+                next_grid[i][j] = cell
 
-            next_grid.append(row)
+        if next_grid == self.grid:
+            self.keep_running = False
 
         self.grid = next_grid
 
