@@ -71,7 +71,7 @@ class LifeLike(object):
         self.generation = 1
         self.population = 0
 
-        file = open(f"{INPUT_GRID_DIRPATH}/{self.automaton_name}/{self.input_name}")
+        file = open(f"{INPUT_GRID_DIRPATH}/{self.input_name}")
         lines = file.readlines()
 
         self.num_rows = int(lines[0][:-1])
