@@ -10,5 +10,6 @@ A virtual environment is not mandatory, but is a good idea.
     - First row is the number of rows for the grid;
     - Second row is the number of columns for the grid;
     - The remaining rows are the "screen", with white (dead) and black (live) squares.
-2. Run the shell command `./run.sh <input>`;
+2. Run the shell command `./run.sh <automaton> <input>`:
+    - b3s23: Conway's Game of Life;
 3. Let it run until it stops (or not), writing a file in directory *./outputs/*.
