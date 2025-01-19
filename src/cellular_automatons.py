@@ -15,6 +15,10 @@ OUTPUT_GRID_DIRPATH = f"{PROJECT_ROOT_PATH}/outputs"
 SLEEP_INTERVAL = 1 # in seconds
 
 
+read_rule = lambda x: list(map(int, list(x)))
+write_rule = lambda x: ''.join(list(map(str, x)))
+
+
 class AutomatonStates(object):
     READY    = 0
     RUNNING  = 1
@@ -40,13 +44,25 @@ class LifeLike(object):
 
     DEFAULT_GRID_SIZE = 30
 
-    def __init__(self, input_name):
+    def __init__(self, input_name, newborn, keepalive):
         super(LifeLike, self).__init__()
 
         self.input_name = input_name
+        self.rules = {
+            "newborn": newborn,
+            "keepalive": keepalive
+        }
         self.sleep_interval = SLEEP_INTERVAL
 
         self.reset()
+
+
+    @property
+    def automaton_name(self):
+        newborn = write_rule(self.rules["newborn"])
+        keepalive = write_rule(self.rules["keepalive"])
+        return f"b{newborn}s{keepalive}"
+
 
     def reset(self):
         """Resets the automaton to the initial state.
@@ -111,7 +127,16 @@ class LifeLike(object):
         self.grid = next_grid
 
     def apply_rules(self, cell_stage, num_neighbors):
-        raise NotImplementedError("Method 'apply_rules' must be implemented in subclasses.")
+        next_cell_stage = cell_stage
+
+        if (cell_stage == CellStates.DEAD) and (num_neighbors in self.rules["newborn"]):
+            next_cell_stage = CellStates.ALIVE
+            self.population = self.population + 1
+        elif (cell_stage == CellStates.ALIVE) and (num_neighbors not in self.rules["keepalive"]):
+            next_cell_stage = CellStates.DEAD
+            self.population = self.population - 1
+
+        return next_cell_stage
 
     def run(self):
         self.write_grid()
@@ -138,31 +163,15 @@ class LifeLikeB3S23(LifeLike):
     def automaton_name(self):
         return "b3s23"
 
-    def apply_rules(self, cell_stage, num_neighbors):
-        next_cell_stage = cell_stage
-
-        if (cell_stage == CellStates.ALIVE) and ((num_neighbors < 2) or (num_neighbors > 3)): # rules 1, 2 and 3
-            next_cell_stage = CellStates.DEAD
-            self.population = self.population - 1
-        elif (cell_stage == CellStates.DEAD) and (num_neighbors == 3): # rule 4
-            next_cell_stage = CellStates.ALIVE
-            self.population = self.population + 1
-
-        return next_cell_stage
-
 
 if __name__ == "__main__":
     import sys
 
-    automaton_type = sys.argv[1].upper()
-    input_name = sys.argv[2]
-    print(f"Running {automaton_type} for input '{input_name}'")
+    newborn = sys.argv[1]
+    keepalive = sys.argv[2]
+    input_name = sys.argv[3]
 
-    life_like_automatons = {
-        "B3S23": LifeLikeB3S23
-    }
+    print(f"Running B{newborn}S{keepalive} for input '{input_name}'")
 
-    automaton_class = life_like_automatons[automaton_type]
-
-    automaton = automaton_class(input_name)
+    automaton = LifeLike(input_name, read_rule(newborn), read_rule(keepalive))
     automaton.run()
