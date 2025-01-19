@@ -4,6 +4,11 @@ Conway's Game of Life (and variations in the future)
 
 ## Running
 
-1. Create an input in directory *./inputs/* with size 30x30;
-2. Run `python conway.py <input>`;
+A virtual environment is not mandatory, but is a good idea.
+
+1. Create an input in directory *./inputs/*, similar to the ones that already exist:
+    - First row is the number of rows for the grid;
+    - Second row is the number of columns for the grid;
+    - The remaining rows are the "screen", with white (dead) and black (live) squares.
+2. Run the shell command `./run.sh <input>`;
 3. Let it run until it stops (or not), writing a file in directory *./outputs/*.

@@ -1,31 +1,28 @@
 """Original Conway's Game of Life.
 """
 
+import os
 import time
 
 
-INPUT_GRID_DIRPATH = 'inputs'
-OUTPUT_GRID_DIRPATH = 'outputs'
-
-COMMENT_MARK = "#"
+PROJECT_ROOT_PATH = os.environ.get("PROJECT_ROOT_PATH")
+INPUT_GRID_DIRPATH = f"{PROJECT_ROOT_PATH}/inputs"
+OUTPUT_GRID_DIRPATH = f"{PROJECT_ROOT_PATH}/outputs"
 
 DEAD = u"\u25A1"
 ALIVE = u"\u25A3"
-SLEEP_INTERVAL = 1
+SLEEP_INTERVAL = 1 # in seconds
 
 
 class Game(object):
     """Game contains the grid and all the information about the game (generation,
-    population and references to the dead and alive positions).
+    population and etc.).
     """
 
-    DEFAULT_GRID_SIZE = 30
-
-    def __init__(self, game_name, size=DEFAULT_GRID_SIZE, sleep_interval=SLEEP_INTERVAL):
+    def __init__(self, game_name, sleep_interval=SLEEP_INTERVAL):
         super(Game, self).__init__()
 
         self.game_name = game_name
-        self.size = size
         self.sleep_interval = sleep_interval
 
         self.keep_running = True
@@ -33,25 +30,24 @@ class Game(object):
         self.reset()
 
     def reset(self):
-        self.grid = [[DEAD for _ in range(self.size)] for _ in range(self.size)]
+        file = open(f"{INPUT_GRID_DIRPATH}/{self.game_name}")
+        lines = file.readlines()
+
+        self.num_rows = int(lines[0][:-1])
+        self.num_cols = int(lines[1][:-1])
+
+        self.grid = [[DEAD for _ in range(self.num_cols)] for _ in range(self.num_rows)]
         self.generation = 1
         self.population = 0
 
-        file = open(f"{INPUT_GRID_DIRPATH}/{self.game_name}")
-
-        i = 0
-        for line in file:
-            if line.strip().startswith(COMMENT_MARK):
-                continue
-
-            j = 0
-            for char in line:
+        for i in range(self.num_rows):
+            for j in range(self.num_cols):
+                char = lines[i + 2][j]
                 if char == ALIVE:
                     self.grid[i][j] = ALIVE
                     self.population = self.population + 1
 
-                j = j + 1
-            i = i + 1
+        file.close()
 
     def run(self):
         self.write_grid()
@@ -65,6 +61,8 @@ class Game(object):
             self.write_grid()
 
     def write_grid(self):
+        os.makedirs(OUTPUT_GRID_DIRPATH, exist_ok=True)
+
         with open(f"{OUTPUT_GRID_DIRPATH}/{self.game_name}", 'w') as file:
             file.write("gen: {}\n".format(self.generation))
             file.write("pop: {}\n".format(self.population))
@@ -72,17 +70,17 @@ class Game(object):
             file.write(screen)
 
     def apply_rules(self):
-        grid_next_stage = [[DEAD for _ in range(self.size)] for _ in range(self.size)]
+        grid_next_stage = [[DEAD for _ in range(self.num_cols)] for _ in range(self.num_rows)]
 
-        for i in range(self.size):
-            for j in range(self.size):
+        for i in range(self.num_rows):
+            for j in range(self.num_cols):
                 cell = self.grid[i][j]
                 cell_next_stage = cell
 
-                i_minus_1 = (i - 1) % self.size
-                i_plus_1 = (i + 1) % self.size
-                j_minus_1 = (j - 1) % self.size
-                j_plus_1 = (j + 1) % self.size
+                i_minus_1 = (i - 1) % self.num_rows
+                i_plus_1 = (i + 1) % self.num_rows
+                j_minus_1 = (j - 1) % self.num_cols
+                j_plus_1 = (j + 1) % self.num_cols
 
                 # checking neighbors
                 num_neighbors = 0
