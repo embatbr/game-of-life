@@ -4,19 +4,22 @@ Game of Life, as well as variations.
 
 
 import os
+import re
 import time
 
 
 PROJECT_ROOT_PATH = os.environ.get("PROJECT_ROOT_PATH")
 
-INPUT_GRID_DIRPATH = f"{PROJECT_ROOT_PATH}/inputs"
+INPUT_GRID_DIRPATH = f"{PROJECT_ROOT_PATH}/inputs/lifelike"
 OUTPUT_GRID_DIRPATH = f"{PROJECT_ROOT_PATH}/outputs"
 
 SLEEP_INTERVAL = 1 # in seconds
 
+AUTOMATON_NAME_PATTERN = r"^(b|B)[0-9]+/(s|S)[0-9]+$"
+AUTOMATON_NAME_REGEX = re.compile(AUTOMATON_NAME_PATTERN)
+
 
 read_rule = lambda x: list(map(int, list(x)))
-write_rule = lambda x: ''.join(list(map(str, x)))
 
 
 class AutomatonStates(object):
@@ -44,25 +47,19 @@ class LifeLike(object):
 
     DEFAULT_GRID_SIZE = 30
 
-    def __init__(self, input_name, newborn, keepalive):
+    def __init__(self, automaton_name, input_name):
         super(LifeLike, self).__init__()
 
+        self.automaton_name = automaton_name
         self.input_name = input_name
+        nums = re.findall(r"\d+", automaton_name)
         self.rules = {
-            "newborn": newborn,
-            "keepalive": keepalive
+            "newborn": read_rule(nums[0]),
+            "keepalive": read_rule(nums[1])
         }
         self.sleep_interval = SLEEP_INTERVAL
 
         self.reset()
-
-
-    @property
-    def automaton_name(self):
-        newborn = write_rule(self.rules["newborn"])
-        keepalive = write_rule(self.rules["keepalive"])
-        return f"b{newborn}s{keepalive}"
-
 
     def reset(self):
         """Resets the automaton to the initial state.
@@ -151,27 +148,16 @@ class LifeLike(object):
             self.write_grid()
 
 
-# TODO remove it and parameterize the rules
-class LifeLikeB3S23(LifeLike):
-    """Conway's Game of Life.
-    """
-
-    def __init__(self, input_name):
-        super(LifeLikeB3S23, self).__init__(input_name)
-
-    @property
-    def automaton_name(self):
-        return "b3s23"
-
-
 if __name__ == "__main__":
     import sys
 
-    newborn = sys.argv[1]
-    keepalive = sys.argv[2]
-    input_name = sys.argv[3]
+    automaton_name = sys.argv[1]
+    input_name = sys.argv[2]
 
-    print(f"Running B{newborn}S{keepalive} for input '{input_name}'")
+    if AUTOMATON_NAME_REGEX.match(automaton_name):
+        print(f"Running {automaton_name} for input '{input_name}'")
 
-    automaton = LifeLike(input_name, read_rule(newborn), read_rule(keepalive))
-    automaton.run()
+        automaton = LifeLike(automaton_name, input_name)
+        automaton.run()
+    else:
+        print("Wrong game type.")
