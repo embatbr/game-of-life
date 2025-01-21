@@ -2,6 +2,7 @@
 
 Conway's Game of Life (and variations in the future)
 
+
 ## Running
 
 A virtual environment is not mandatory, but is a good idea.
@@ -14,3 +15,10 @@ A virtual environment is not mandatory, but is a good idea.
     - `<automaton_name>` pattern is r"^(b|B)[0-9]+/(s|S)[0-9]+$".
     - For example, "b3/s23" is Conway's Game of Life and runs as `./run.sh b3/s23 <input_name>`.
 3. Let it run until it stops (or not), writing a file in directory *./outputs/<automaton_name>/<input_name>*.
+
+
+## TODO
+
+- Create a module named `automata` to abstract the behavior of cellular automata. Also, maybe create another subclass for cellular automata;
+- Make cellular automata that go beyond life-like (several stages, change forks and "stochastic" rules);
+- Insert competition between groups in automata.
