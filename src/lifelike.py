@@ -5,27 +5,20 @@ Game of Life, as well as variations.
 
 import os
 import re
-import time
+
+from automata import Automaton, AutomatonStates
 
 
 PROJECT_ROOT_PATH = os.environ.get("PROJECT_ROOT_PATH")
 
-INPUT_GRID_DIRPATH = f"{PROJECT_ROOT_PATH}/inputs/lifelike"
-OUTPUT_GRID_DIRPATH = f"{PROJECT_ROOT_PATH}/outputs"
+INPUT_DIRPATH = f"{PROJECT_ROOT_PATH}/inputs/lifelike"
+OUTPUT_DIRPATH = f"{PROJECT_ROOT_PATH}/outputs/lifelike"
 
-SLEEP_INTERVAL = 1 # in seconds
-
-AUTOMATON_NAME_PATTERN = r"^(b|B)[0-9]+/(s|S)[0-9]+$"
+AUTOMATON_NAME_PATTERN = r"^(b|B)[0-9]+(s|S)[0-9]+$"
 AUTOMATON_NAME_REGEX = re.compile(AUTOMATON_NAME_PATTERN)
 
 
 read_rule = lambda x: list(map(int, list(x)))
-
-
-class AutomatonStates(object):
-    READY    = 0
-    RUNNING  = 1
-    FINISHED = 2 # no guarantee this one will be reached
 
 
 class CellStates(object):
@@ -33,7 +26,7 @@ class CellStates(object):
     ALIVE = u"\u25A3"
 
 
-class LifeLike(object):
+class LifeLike(Automaton):
     """Base class for a life-like cellular automaton.
 
     Rules the automaton must follow:
@@ -45,30 +38,25 @@ class LifeLike(object):
     cells alive and the cell's own state.
     """
 
-    DEFAULT_GRID_SIZE = 30
-
     def __init__(self, automaton_name, input_name):
-        super(LifeLike, self).__init__()
+        super(LifeLike, self).__init__(automaton_name, OUTPUT_DIRPATH)
 
-        self.automaton_name = automaton_name
         self.input_name = input_name
-        nums = re.findall(r"\d+", automaton_name)
+        nums = re.findall(r"\d+", self.automaton_name)
         self.rules = {
             "newborn": read_rule(nums[0]),
             "keepalive": read_rule(nums[1])
         }
-        self.sleep_interval = SLEEP_INTERVAL
 
         self.reset()
 
     def reset(self):
         """Resets the automaton to the initial state.
         """
-        self.state = AutomatonStates.READY
-        self.generation = 1
+        super(LifeLike, self).reset()
         self.population = 0
 
-        file = open(f"{INPUT_GRID_DIRPATH}/{self.input_name}")
+        file = open(f"{INPUT_DIRPATH}/{self.input_name}")
         lines = file.readlines()
 
         self.num_rows = int(lines[0][:-1])
@@ -87,10 +75,14 @@ class LifeLike(object):
     def _create_grid(self):
         return [[CellStates.DEAD for _ in range(self.num_cols)] for _ in range(self.num_rows)]
 
-    def write_grid(self):
-        os.makedirs(f"{OUTPUT_GRID_DIRPATH}/{self.automaton_name}", exist_ok=True)
+    @property
+    def generation(self):
+        return self.iteration
 
-        with open(f"{OUTPUT_GRID_DIRPATH}/{self.automaton_name}/{self.input_name}", 'w') as file:
+    def write_output(self):
+        super(LifeLike, self).write_output()
+
+        with open(f"{self.output_dirpath}/{self.input_name}", 'w') as file:
             file.write("gen: {}\n".format(self.generation))
             file.write("pop: {}\n".format(self.population))
             screen = '\n'.join(''.join(row) for row in self.grid)
@@ -134,18 +126,6 @@ class LifeLike(object):
             self.population = self.population - 1
 
         return next_cell_stage
-
-    def run(self):
-        self.write_grid()
-        self.state = AutomatonStates.RUNNING
-
-        while self.state == AutomatonStates.RUNNING:
-            self.process()
-            self.generation = self.generation + 1
-
-            time.sleep(self.sleep_interval)
-
-            self.write_grid()
 
 
 if __name__ == "__main__":
