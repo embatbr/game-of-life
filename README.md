@@ -20,6 +20,5 @@ A virtual environment is not mandatory, but is a good idea.
 
 ## TODO
 
-- Create a subclass `CellularAutomaton` of class `Automaton`;
 - Make cellular automata that go beyond life-like (several stages, change forks and "stochastic" rules);
 - Insert competition between groups in cellular automata.
