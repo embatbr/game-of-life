@@ -22,13 +22,17 @@ class Automaton(object):
     predetermined instructions.
     """
 
-    def __init__(self, automaton_name, output_prefix):
+    def __init__(self, class_path, automaton_name):
         super(Automaton, self).__init__()
 
+        self.class_path = class_path
         self.automaton_name = automaton_name
-        self.output_dirpath = f"{output_prefix}/{self.automaton_name}"
 
         self.sleep_interval = SLEEP_INTERVAL
+
+    @property
+    def output_path(self):
+        return f"outputs/{self.class_path}/{self.automaton_name}"
 
     def run(self):
         """Do not change me in subclass. No need for that. Just play along.
@@ -52,7 +56,7 @@ class Automaton(object):
         self.state = AutomatonStates.FINISHED
 
     def write_output(self):
-        os.makedirs(self.output_dirpath, exist_ok=True)
+        os.makedirs(self.output_path, exist_ok=True)
 
     def process(self):
         raise NotImplementedError("Method 'process' must be implemented in subclass.")
@@ -62,8 +66,8 @@ class CellularAutomaton(Automaton):
     """
     """
     
-    def __init__(self, automaton_name, output_prefix):
-        super(CellularAutomaton, self).__init__(automaton_name, output_prefix)
+    def __init__(self, class_path, automaton_name):
+        super(CellularAutomaton, self).__init__(class_path, automaton_name)
 
     @property
     def generation(self):
@@ -82,7 +86,9 @@ class CellularAutomaton(Automaton):
     def write_output(self):
         super(CellularAutomaton, self).write_output()
 
-        with open(f"{self.output_dirpath}/{self.input_name}", 'w') as file:
+        final_output_path = f"{self.output_path}/screen"
+
+        with open(final_output_path, 'w') as file:
             file.write("gen: {}\n".format(self.generation))
             file.write("pop: {}\n".format(self.population))
             self.write_grid(file)

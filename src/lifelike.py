@@ -12,7 +12,6 @@ from automata import CellularAutomaton
 PROJECT_ROOT_PATH = os.environ.get("PROJECT_ROOT_PATH")
 
 INPUT_PREFIX = f"{PROJECT_ROOT_PATH}/inputs/lifelike"
-OUTPUT_PREFIX = f"{PROJECT_ROOT_PATH}/outputs/lifelike"
 
 AUTOMATON_NAME_PATTERN = r"^(b|B)[0-9]+(s|S)[0-9]+$"
 AUTOMATON_NAME_REGEX = re.compile(AUTOMATON_NAME_PATTERN)
@@ -38,22 +37,26 @@ class LifeLike(CellularAutomaton):
         ALIVE = u"\u25A3"
 
 
-    def __init__(self, automaton_name, input_name):
-        super(LifeLike, self).__init__(automaton_name, OUTPUT_PREFIX)
+    def __init__(self, class_path, automaton_name, input_name):
+        super(LifeLike, self).__init__(class_path, automaton_name)
 
         self.input_name = input_name
         nums = re.findall(r"\d+", self.automaton_name)
         self.rules = {
-            "newborn": read_rule(nums[0]),
-            "keepalive": read_rule(nums[1])
+            "born": read_rule(nums[0]),
+            "survive": read_rule(nums[1])
         }
 
         self.reset()
 
+    @property
+    def output_path(self):
+        return f"{super(LifeLike, self).output_path}/{self.input_name}"
+
     def reset(self):
         super(LifeLike, self).reset()
 
-        file = open(f"{INPUT_PREFIX}/{self.input_name}")
+        file = open(f"inputs/{self.class_path}/{self.input_name}")
         lines = file.readlines()
 
         self.num_rows = int(lines[0][:-1])
@@ -108,10 +111,10 @@ class LifeLike(CellularAutomaton):
     def apply_rules(self, cell_stage, num_neighbors):
         next_cell_stage = cell_stage
 
-        if (cell_stage == self.CellStates.DEAD) and (num_neighbors in self.rules["newborn"]):
+        if (cell_stage == self.CellStates.DEAD) and (num_neighbors in self.rules["born"]):
             next_cell_stage = self.CellStates.ALIVE
             self.population = self.population + 1
-        elif (cell_stage == self.CellStates.ALIVE) and (num_neighbors not in self.rules["keepalive"]):
+        elif (cell_stage == self.CellStates.ALIVE) and (num_neighbors not in self.rules["survive"]):
             next_cell_stage = self.CellStates.DEAD
             self.population = self.population - 1
 
