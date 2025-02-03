@@ -168,7 +168,7 @@ class LifeLikeCancer(LifeLike):
                 next_cell_stage = self.apply_rules(cell_stage, num_alive_neighbors, num_cancer_neighbors)
                 next_grid[i][j] = next_cell_stage
 
-        if (next_grid == self.grid) or (self.population == 0):
+        if next_grid == self.grid:
             self.finish()
 
         self.grid = next_grid

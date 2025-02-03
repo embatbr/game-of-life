@@ -29,7 +29,6 @@ if __name__ == "__main__":
     kwargs = {arg.split('=')[0]:arg.split('=')[1] for arg in class_args}
 
     automaton = class_obj(class_path, **kwargs)
-    automaton.reset()
     print(f"Running '{class_path}' with arguments \"{kwargs}\".")
     print(f"See outputs in '{automaton.output_path}'")
     automaton.run()

@@ -37,6 +37,8 @@ class Automaton(object):
     def run(self):
         """Do not change me in subclass. No need for that. Just play along.
         """
+        self.reset()
+
         self.write_output()
         self.state = AutomatonStates.RUNNING
 
