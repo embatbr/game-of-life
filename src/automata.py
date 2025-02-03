@@ -73,9 +73,20 @@ class CellularAutomaton(Automaton):
     def generation(self):
         return self.iteration
 
+    @property
+    def screen_output_path(self):
+        return f"{self.output_path}/screen"
+
+    @property
+    def history_output_path(self):
+        return f"{self.output_path}/history"
+
     def reset(self):
         super(CellularAutomaton, self).reset()
         self.population = 0
+
+        if os.path.exists(self.history_output_path) and os.path.isfile(self.history_output_path):
+            os.remove(self.history_output_path)
 
     def create_grid(self):
         raise NotImplementedError("Method 'create_grid' must be implemented in subclass.")
@@ -86,9 +97,13 @@ class CellularAutomaton(Automaton):
     def write_output(self):
         super(CellularAutomaton, self).write_output()
 
-        final_output_path = f"{self.output_path}/screen"
-
-        with open(final_output_path, 'w') as file:
+        with open(self.screen_output_path, 'w') as file:
             file.write("gen: {}\n".format(self.generation))
             file.write("pop: {}\n".format(self.population))
             self.write_grid(file)
+
+        with open(self.history_output_path, 'a') as file:
+            file.write("gen: {}\n".format(self.generation))
+            file.write("pop: {}\n".format(self.population))
+            self.write_grid(file)
+            file.write('\n')

@@ -47,8 +47,6 @@ class LifeLike(CellularAutomaton):
             "survive": read_rule(nums[1])
         }
 
-        self.reset()
-
     @property
     def output_path(self):
         return f"{super(LifeLike, self).output_path}/{self.input_name}"
@@ -142,7 +140,7 @@ class LifeLikeCancer(LifeLike):
 
     @property
     def output_path(self):
-        return f"{super(LifeLike, self).output_path}/{self.input_name}/{self.mutation_chance}-{self.growth_rate}"
+        return f"{super(LifeLikeCancer, self).output_path}/{self.mutation_chance}-{self.growth_rate}"
 
     def process(self):
         next_grid = self.create_grid()
@@ -178,7 +176,7 @@ class LifeLikeCancer(LifeLike):
     def apply_rules(self, cell_stage, num_alive_neighbors, num_cancer_neighbors):
         next_cell_stage = cell_stage
 
-        if (cell_stage == self.CellStates.DEAD) and (num_cancer_neighbors > 0) and (random.randint(0, self.NUM_MAX_NEIGHBORS) < max(num_cancer_neighbors, self.growth_rate)):
+        if (cell_stage == self.CellStates.DEAD) and (num_cancer_neighbors > 0) and (num_alive_neighbors > 0) and (random.randint(0, self.NUM_MAX_NEIGHBORS) < max(num_cancer_neighbors, self.growth_rate)):
             next_cell_stage = self.CellStates.CANCER
         elif (cell_stage == self.CellStates.DEAD) and (num_alive_neighbors in self.rules["born"]):
             next_cell_stage = self.CellStates.ALIVE
@@ -189,6 +187,8 @@ class LifeLikeCancer(LifeLike):
         elif (cell_stage == self.CellStates.ALIVE) and (num_alive_neighbors not in self.rules["survive"]):
             next_cell_stage = self.CellStates.DEAD
             self.population = self.population - 1
+        elif (cell_stage == self.CellStates.CANCER) and (num_alive_neighbors == 0):
+            next_cell_stage = self.CellStates.DEAD
 
         return next_cell_stage
 
