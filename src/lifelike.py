@@ -4,14 +4,11 @@ Game of Life, as well as variations.
 
 
 import os
+import random
 import re
 
 from automata import CellularAutomaton
 
-
-PROJECT_ROOT_PATH = os.environ.get("PROJECT_ROOT_PATH")
-
-INPUT_PREFIX = f"{PROJECT_ROOT_PATH}/inputs/lifelike"
 
 AUTOMATON_NAME_PATTERN = r"^(b|B)[0-9]+(s|S)[0-9]+$"
 AUTOMATON_NAME_REGEX = re.compile(AUTOMATON_NAME_PATTERN)
@@ -35,6 +32,9 @@ class LifeLike(CellularAutomaton):
     class CellStates(object):
         DEAD  = u"\u25A1"
         ALIVE = u"\u25A3"
+
+
+    NUM_MAX_NEIGHBORS = 8
 
 
     def __init__(self, class_path, automaton_name, input_name):
@@ -66,9 +66,10 @@ class LifeLike(CellularAutomaton):
         for i in range(self.num_rows):
             for j in range(self.num_cols):
                 char = lines[i + 2][j]
-                if char == self.CellStates.ALIVE:
-                    self.grid[i][j] = self.CellStates.ALIVE
-                    self.population = self.population + 1
+                if char != self.CellStates.DEAD:
+                    self.grid[i][j] = char
+                    if char == self.CellStates.ALIVE:
+                        self.population = self.population + 1
 
         file.close()
 
@@ -98,7 +99,7 @@ class LifeLike(CellularAutomaton):
                 for ix in [i_minus_1, i, i_plus_1]:
                     for jx in [j_minus_1, j, j_plus_1]:
                         if ((ix, jx) != (i, j)) and (self.grid[ix][jx] == self.CellStates.ALIVE):
-                                num_neighbors = num_neighbors + 1
+                            num_neighbors = num_neighbors + 1
 
                 next_cell_stage = self.apply_rules(cell_stage, num_neighbors)
                 next_grid[i][j] = next_cell_stage
@@ -115,6 +116,77 @@ class LifeLike(CellularAutomaton):
             next_cell_stage = self.CellStates.ALIVE
             self.population = self.population + 1
         elif (cell_stage == self.CellStates.ALIVE) and (num_neighbors not in self.rules["survive"]):
+            next_cell_stage = self.CellStates.DEAD
+            self.population = self.population - 1
+
+        return next_cell_stage
+
+
+class LifeLikeCancer(LifeLike):
+    """Similar to LifeLike, but with more states and different rules.
+    """
+
+    class CellStates(object):
+        DEAD   = u"\u25A1"
+        ALIVE  = u"\u25A3"
+        CANCER = u"\u25A9"
+
+
+    def __init__(self, class_path, automaton_name, input_name, mutation_chance, growth_rate):
+        super(LifeLikeCancer, self).__init__(class_path, automaton_name, input_name)
+
+        self.mutation_chance = float(mutation_chance)
+        self.growth_rate = int(growth_rate)
+        if (self.growth_rate < 1) or (self.growth_rate > 8):
+            raise Exception("LifeLikeCancer 'growth_rate' must be in interval [1,8].")
+
+    @property
+    def output_path(self):
+        return f"{super(LifeLike, self).output_path}/{self.input_name}/{self.mutation_chance}-{self.growth_rate}"
+
+    def process(self):
+        next_grid = self.create_grid()
+
+        for i in range(self.num_rows):
+            for j in range(self.num_cols):
+                cell_stage = self.grid[i][j]
+
+                i_minus_1 = (i - 1) % self.num_rows
+                i_plus_1 = (i + 1) % self.num_rows
+                j_minus_1 = (j - 1) % self.num_cols
+                j_plus_1 = (j + 1) % self.num_cols
+
+                # checking neighbors
+                num_alive_neighbors = 0
+                num_cancer_neighbors = 0
+                for ix in [i_minus_1, i, i_plus_1]:
+                    for jx in [j_minus_1, j, j_plus_1]:
+                        if (ix, jx) != (i, j):
+                            if self.grid[ix][jx] == self.CellStates.ALIVE:
+                                num_alive_neighbors = num_alive_neighbors + 1
+                            elif self.grid[ix][jx] == self.CellStates.CANCER:
+                                num_cancer_neighbors = num_cancer_neighbors + 1
+
+                next_cell_stage = self.apply_rules(cell_stage, num_alive_neighbors, num_cancer_neighbors)
+                next_grid[i][j] = next_cell_stage
+
+        if (next_grid == self.grid) or (self.population == 0):
+            self.finish()
+
+        self.grid = next_grid
+
+    def apply_rules(self, cell_stage, num_alive_neighbors, num_cancer_neighbors):
+        next_cell_stage = cell_stage
+
+        if (cell_stage == self.CellStates.DEAD) and (num_cancer_neighbors > 0) and (random.randint(0, self.NUM_MAX_NEIGHBORS) < max(num_cancer_neighbors, self.growth_rate)):
+            next_cell_stage = self.CellStates.CANCER
+        elif (cell_stage == self.CellStates.DEAD) and (num_alive_neighbors in self.rules["born"]):
+            next_cell_stage = self.CellStates.ALIVE
+            self.population = self.population + 1
+        elif (cell_stage == self.CellStates.ALIVE) and (random.random() < self.mutation_chance):
+            next_cell_stage = self.CellStates.CANCER
+            self.population = self.population - 1
+        elif (cell_stage == self.CellStates.ALIVE) and (num_alive_neighbors not in self.rules["survive"]):
             next_cell_stage = self.CellStates.DEAD
             self.population = self.population - 1
 

@@ -18,9 +18,4 @@ A virtual environment is not mandatory, but is a good idea.
 
 ## TODO
 
-- Write class lifelike.LifeLikeCancer:
-    - Mutation into cancer cell given a probability in input file;
-    - No death (always survive);
-    - Use von Neumann neighborhood for tumor growth.
-- Make cellular automata that go beyond life-like (several stages, change forks and "stochastic" rules);
 - Insert competition between groups in cellular automata.
